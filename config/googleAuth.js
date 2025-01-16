@@ -12,3 +12,6 @@ async function verifyGoogleToken(idToken) {
 }
 
 module.exports = { verifyGoogleToken };
+
+
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
