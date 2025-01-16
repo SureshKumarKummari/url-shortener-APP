@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login with Google</title>
+  
+  <!-- Google API JavaScript Client Library -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+  <style>
+   body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      text-align: center;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      background-color: #4285F4;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #357ae8;
+    }
+  </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login to Your Account</h1>
+        <p>Login using your Google account to access the URL shortener app.</p>
+        <a href="/auth/google">
+          <button>Login with Google</button>
+        </a>
+      </div>
+
+  <script>
+    // This function is called after a successful sign-in
+    function onSignIn(googleUser) {
+      var profile = googleUser.getBasicProfile();
+      console.log("ID: " + profile.getId());
+      console.log("Name: " + profile.getName());
+      console.log("Image URL: " + profile.getImageUrl());
+      console.log("Email: " + profile.getEmail());
+
+      // Get the ID token to send to your server for verification
+      var id_token = googleUser.getAuthResponse().id_token;
+      
+      // Send the ID token to the server
+      fetch('/auth/google/callback', {
+        method: 'POST',
+        body: JSON.stringify({ id_token: id_token }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Redirect to the shortener page after successful authentication
+          window.location.href = '/shortener';
+        } else {
+          console.error("Authentication failed");
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>
