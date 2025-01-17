@@ -5,9 +5,6 @@ const cookieParser = require('cookie-parser');
 const path=require('path');
 
 
-const passport = require('passport');
-const session = require('express-session');
-
 
 
 const connectDB  = require('./config/database');
