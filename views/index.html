@@ -38,6 +38,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      margin: 5px;
       transition: background-color 0.3s ease;
     }
     button:hover {
@@ -56,6 +57,13 @@
   </style>
 </head>
 <body>
+  <div>
+  <div class="buttons">
+    <button onclick="redirectUrl()">Redirect URL</button>
+    <button onclick="getOverallAnalytics()">Overall Analytics</button>
+    <button onclick="getTopicAnalytics()">Topic-wise Analytics</button>
+    <button onclick="getUrlAnalytics()">URL-wise Analytics</button>
+  </div>
   <div class="container">
     <h1>URL Shortener</h1>
     <form id="urlForm">
@@ -72,10 +80,10 @@
 
     <div class="result">
       <h3>Your shortened URL will appear here:</h3>
-      <p id="shortenedUrl"></p>
+      <a id="shortened"><p id="shortenedUrl"></p></a>
     </div>
   </div>
-
+</div>
   <script>
     document.getElementById('urlForm').addEventListener('submit', handleSubmit);
 
@@ -99,11 +107,49 @@
       .then(data => {
         console.log(data);
         document.getElementById('shortenedUrl').textContent = data.shortUrl;
+        //document.getElementById('shortened').href=`${data.shortUrl}`;
       })
       .catch(error => {
         console.error('Error:', error);
       });
     }
+
+
+    async function redirectUrl() { 
+      const alias = prompt("Enter the short URL alias to redirect:"); 
+      if (alias) { 
+        window.location.href = `/api/shorten/${alias}`; 
+      } 
+      } 
+      
+      async function getOverallAnalytics() { 
+        const response = await fetch('/api/analytics/overall'); 
+        const data = await response.json(); 
+        console.log("Overall Analytics:", data); 
+        alert(JSON.stringify(data, null, 2)); 
+      } 
+      
+      async function getTopicAnalytics() { 
+        const topic = prompt("Enter the topic for analytics:"); 
+        if (topic) { 
+          const response = await fetch(`/api/analytics/topic/${topic}`); 
+          const data = await response.json(); 
+          console.log("Topic Analytics:", data); 
+          alert(JSON.stringify(data, null, 2)); 
+        } 
+      }
+
+
+    async function getUrlAnalytics() {
+       const alias = prompt("Enter the short URL alias for analytics:"); 
+       if (alias) { 
+        const response = await fetch(`/api/analytics/${alias}`); 
+        const data = await response.json(); 
+        console.log("URL Analytics:", data); 
+        alert(JSON.stringify(data, null, 2)); 
+      }
+     }
+     
   </script>
 </body>
 </html>

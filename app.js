@@ -29,7 +29,6 @@ app.get('/index',(req,res)=>{
   res.sendFile(path.join(__dirname,'views','index.html'));
 })
 
-// Routes
 app.use('/auth', authRoutes);
 app.use('/url', urlRoutes);
 app.use('/analytics', analyticsRoutes);

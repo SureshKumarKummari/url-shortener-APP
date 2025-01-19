@@ -1,11 +1,13 @@
 const URL = require('../models/urlModel');
+const logs=require('../models/logModel');
 const shortid = require('shortid');
 const { client } =require('../config/redis');
+const { UAParser }=require('user-agent-parser');
+
 
 async function createShortUrl(req, res) {
   const { longUrl,customAlias,  topic } = req.body;
-  const short_url =  shortid.generate();
-  const authToken = req.headers.authorization;
+  const short_url =  customAlias||shortid.generate();
   console.log("created short id",short_url,req.user);
 
   try {
@@ -14,17 +16,19 @@ async function createShortUrl(req, res) {
       url:longUrl,
       short_url,
       user_id:req.user.id,
-      group:topic||"acquisition"
+      group:topic
     });
 
     newUrl.save();
     console.log(newUrl);
+    const fullUrl = `${req.protocol}://${req.get('host')}/${short_url}`;
 
-    res.status(201).json({ shortUrl: newUrl.short_url, createdAt: newUrl.createdAt });
+    res.status(201).json({ shortUrl: fullUrl,short_url:short_url, createdAt: newUrl.createdAt });
   } catch (err) {
     res.status(500).json({ message: 'Error creating short URL' });
   }
 }
+
 
 
 async function redirectUrl(req,res){
@@ -38,23 +42,24 @@ async function redirectUrl(req,res){
           return res.status(404).json({ message: 'URL not found' }); 
         } 
         originalUrl = urlDoc.url; 
-        await client.set(alias, originalUrl, 'EX', 24 * 60 * 60); 
+        await client.set(alias, [originalUrl,urlDoc._id], 'EX', 24 * 60 * 60); 
       } 
-      const log = { 
+      originalUrl=originalUrl||originalUrl[0];
+      let urlid=originalUrl[1]||urlDoc._id;
+
+     const parser = new UAParser(req.headers['user-agent']); 
+     const result = parser.getResult
+      const log =await logs.create({ 
+        urlId:urlid,
         timestamp: Date.now(), 
         userAgent: req.headers['user-agent'], 
         ip: req.ip, 
-        geolocation: 'N/A', 
-      };
-      if (urlDoc) { 
-        urlDoc.analytics.clicks += 1; 
-        urlDoc.analytics.logs.push(log); 
-        await urlDoc.save(); 
-      } else { 
-        await URL.updateOne({ short_url: alias },
-           { $inc: { 'analytics.clicks': 1 }, 
-           $push: { 'analytics.logs': log } }); 
-        } 
+        geolocation: 'N/A',
+        deviceType: result.device.type || 'Desktop', 
+        osType: result.os.name, 
+      });
+      log.save();
+
       return res.redirect(originalUrl); 
     } catch (err) { 
        console.error('Error redirecting:', err); 
@@ -62,7 +67,6 @@ async function redirectUrl(req,res){
     }
   
 }
-
 
 module.exports = { createShortUrl,redirectUrl };
 

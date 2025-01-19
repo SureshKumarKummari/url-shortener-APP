@@ -19,23 +19,9 @@ const urlSchema = new Schema({
   type: String,
     required: true,
   },
-  analytics: {
-    clicks: {
-      type: Number,
-      default: 0,
-    },
-    logs: [{
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
-      userAgent: String,
-      ip: String,
-      geolocation: {
-        type:String,
-        default:"N/A"
-      }
-    }]
+  clicks: {
+    type: Number,
+    default: 0,
   },
 }, {
   timestamps: true, 

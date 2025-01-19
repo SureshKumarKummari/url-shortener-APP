@@ -1,6 +1,5 @@
 const express = require('express');
 const { createShortUrl,redirectUrl } = require('../controllers/urlController');
-const { trackAnalytics } = require('../controllers/analyticsController');
 const  authenticateToken  = require('../middleware/jwtVerification'); 
 
 const router = express.Router();

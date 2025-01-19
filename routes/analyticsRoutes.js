@@ -1,9 +1,13 @@
 const express = require('express');
-const { trackAnalytics } = require('../controllers/analyticsController');
+const { getAnalytics,getAnalyticsByTopic,getOverallAnalytics } = require('../controllers/analyticsController');
+const  authenticateToken  = require('../middleware/jwtVerification');
 
 const router = express.Router();
 
-// Route to view analytics of a specific URL (this is just an example; you may need to enhance it)
-router.get('/:short_url/stats', trackAnalytics);
+router.get('/:alias',authenticateToken, getAnalytics);
+
+router.get('/topic/:topic',authenticateToken, getAnalyticsByTopic)
+
+router.get('/overall',authenticateToken,getOverallAnalytics);
 
 module.exports = router;
