@@ -5,13 +5,13 @@ const cookieParser = require('cookie-parser');
 const path=require('path');
 
 
-
-
 const connectDB  = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const urlRoutes = require('./routes/urlRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const rateLimiter = require('./middleware/rateLimiter');
+
+require('./config/googleAuth');
 //const fs=require('fs');
 
 const app = express();
@@ -24,6 +24,10 @@ app.use(cookieParser());
 
 app.get('/',(req,res)=>{
   res.sendFile(path.join(__dirname,'views','login.html'));
+})
+
+app.get('/index',(req,res)=>{
+  res.sendFile(path.join(__dirname,'views','index.html'));
 })
 
 // Routes

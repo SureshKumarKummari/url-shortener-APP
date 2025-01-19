@@ -1,21 +1,60 @@
-const { verifyGoogleToken } = require('../config/googleAuth');
-const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/userModel'); 
 
-async function googleSignIn(req, res) {
+dotenv.config();
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+async function googleCallback(req, res) {
   try {
+    
     const { idToken } = req.body;
-    const payload = await verifyGoogleToken(idToken);
 
-    let user = await User.findOne({ where: { google_id: payload.sub } });
+    //console.log(idToken);
+  
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-    if (!user) {
-      user = await User.create({ google_id: payload.sub, email: payload.email });
+    const payload = ticket.getPayload();
+    const { sub, name, email } = payload;
+
+    console.log(payload);
+
+    //res.send();
+    let existingUser = await User.findOne({ google_id: sub });
+
+    if (!existingUser) {
+      existingUser = new User({
+        google_id: sub,
+        name,
+        email,
+      });
+
+      await existingUser.save(); 
     }
 
-    res.status(200).json({ userId: user.id, email: user.email });
-  } catch (err) {
-    res.status(400).json({ message: 'Invalid Google token' });
+    const token = jwt.sign(
+      {
+        id: existingUser._id,
+        email: existingUser.email,
+        name: existingUser.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    return res.json({
+      success: true,
+      token: token,
+      user: existingUser,
+    });
+  } catch (error) {
+    console.error('Error during Google authentication:', error);
+    return res.status(400).json({ success: false, message: 'Error during authentication' });
   }
 }
 
-module.exports = { googleSignIn };
+module.exports = { googleCallback };

@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login with Google</title>
-  
-  <!-- Google API JavaScript Client Library -->
-  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <title>Login/SignUp with Google</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
-   body {
+    body {
       font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
@@ -28,7 +26,6 @@
     button {
       background-color: #4285F4;
       color: white;
-      padding: 10px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
@@ -36,46 +33,106 @@
     button:hover {
       background-color: #357ae8;
     }
+    #error-dialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #f8d7da;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      z-index: 1000;
+    }
+    #error-dialog button {
+      background-color: #721c24;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Login to Your Account</h1>
-        <p>Login using your Google account to access the URL shortener app.</p>
-        <a href="/auth/google">
-          <button>Login with Google</button>
-        </a>
-      </div>
+    
+  <div class="container">
+        <h1>Welcome To Url Shortener</h1>
+    <p>Login/SignUp using your Google account.</p>
+    <button id="google-signin-btn"></button>
+  </div>
+  <div id="error-dialog">
+    <p id="error-message"></p>
+    <button onclick="closeErrorDialog()">Close</button>
+  </div>
 
   <script>
-    // This function is called after a successful sign-in
-    function onSignIn(googleUser) {
-      var profile = googleUser.getBasicProfile();
-      console.log("ID: " + profile.getId());
-      console.log("Name: " + profile.getName());
-      console.log("Image URL: " + profile.getImageUrl());
-      console.log("Email: " + profile.getEmail());
+    window.onload = function() {
+      google.accounts.id.initialize({
+        client_id: '744400210883-p47l84bgrlq1khvcgp4ga343cvs2p5so.apps.googleusercontent.com', 
+        callback: handleCredentialResponse
+      });
 
-      // Get the ID token to send to your server for verification
-      var id_token = googleUser.getAuthResponse().id_token;
-      
-      // Send the ID token to the server
-      fetch('/auth/google/callback', {
+      google.accounts.id.renderButton(
+        document.getElementById('google-signin-btn'), 
+        { theme: "outline", size: "large" }
+      );
+    };
+
+    function handleCredentialResponse(response) {
+        if (!response || !response.credential) {
+        console.error('No credential received.');
+        showErrorDialog('Authentication failed. No credentials received.');
+        return;
+      }
+
+        console.log(response.toString());
+      const idToken = response.credential;  
+       fetch('http://localhost:5000/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ id_token: id_token }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken })  // Send ID token to backend
       })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
-          // Redirect to the shortener page after successful authentication
-          window.location.href = '/shortener';
+        if (data.token) {
+          console.log('JWT Token from server:', data.token);
+
+          localStorage.setItem('authToken', data.token);
+
+          // Redirect to index.html
+          window.location.href = 'index';
         } else {
-          console.error("Authentication failed");
+          console.error('Authentication failed:', data.message);
+          showErrorDialog('Authentication failed. Please try again.');
         }
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => {
+        console.error('Error during sign-in:', error);
+        showErrorDialog('Error during sign-in. Please try again.');
+      });
     }
+
+    // Function to show error dialog
+    function showErrorDialog(message) {
+      const dialog = document.getElementById('error-dialog');
+      const errorMessage = document.getElementById('error-message');
+      errorMessage.textContent = message;
+      dialog.style.display = 'block';
+    }
+
+    // Function to close error dialog
+    function closeErrorDialog() {
+      const dialog = document.getElementById('error-dialog');
+      dialog.style.display = 'none';
+    }
+      console.log('User Name:', idToken);
+    
   </script>
+
 </body>
 </html>

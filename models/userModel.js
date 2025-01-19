@@ -1,22 +1,24 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Define the User schema
 const userSchema = new Schema({
   google_id: {
     type: String,
     unique: true,
-    required: true, // Ensures google_id is required
+    required: true,
+  },
+  name:{
+    type:String,
+    required:true,
   },
   email: {
     type: String,
-    required: true, // Ensures email is required
+    required: true, 
   },
 }, {
-  timestamps: true, // Automatically adds createdAt and updatedAt fields
+  timestamps: true, 
 });
 
-// Create the Mongoose model
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

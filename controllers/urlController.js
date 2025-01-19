@@ -2,12 +2,12 @@ const URL = require('../models/urlModel');
 const { generateShortUrl } = require('../util/urlShortener');
 
 async function createShortUrl(req, res) {
-  const { original_url, user_id, group } = req.body;
+  const { url } = req.body;
   const short_url = generateShortUrl();
 
   try {
     const newUrl = await URL.create({
-      original_url,
+      url,
       short_url,
       user_id,
       group,

@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 // Define the URL schema
 const urlSchema = new Schema({
-  original_url: {
+  url: {
     type: String,
     required: true,
   },
@@ -33,10 +33,9 @@ const urlSchema = new Schema({
     }],
   },
 }, {
-  timestamps: true, // Automatically creates 'createdAt' and 'updatedAt' fields
+  timestamps: true, 
 });
 
-// Create the Mongoose model
 const URL = mongoose.model('URL', urlSchema);
 
 module.exports = URL;
