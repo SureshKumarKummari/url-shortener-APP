@@ -10,8 +10,6 @@ async function googleCallback(req, res) {
   try {
     
     const { idToken } = req.body;
-
-    //console.log(idToken);
   
     const ticket = await client.verifyIdToken({
       idToken,
@@ -23,7 +21,6 @@ async function googleCallback(req, res) {
 
     console.log(payload);
 
-    //res.send();
     let existingUser = await User.findOne({ google_id: sub });
 
     if (!existingUser) {

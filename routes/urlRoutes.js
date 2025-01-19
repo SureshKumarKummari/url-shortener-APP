@@ -1,11 +1,11 @@
 const express = require('express');
-const { createShortUrl } = require('../controllers/urlController');
+const { createShortUrl,redirectUrl } = require('../controllers/urlController');
 const { trackAnalytics } = require('../controllers/analyticsController');
+const  authenticateToken  = require('../middleware/jwtVerification'); 
 
 const router = express.Router();
 
-router.post('/shorten', createShortUrl);
-
-router.get('/:short_url', trackAnalytics);
+router.post('/shorten', authenticateToken, createShortUrl); 
+router.get('/shorten/:alias',authenticateToken, redirectUrl); 
 
 module.exports = router;

@@ -53,7 +53,6 @@
     .result a:hover {
       text-decoration: underline;
     }
-    
   </style>
 </head>
 <body>
@@ -61,6 +60,13 @@
     <h1>URL Shortener</h1>
     <form id="urlForm">
       <input type="text" name="longUrl" placeholder="Enter your long URL" required />
+      <input type="text" name="customAlias" placeholder="Enter a custom alias (optional)" />
+      <input list="topics" name="topic" placeholder="Enter a topic (optional)" /> 
+      <datalist id="topics"> 
+        <option value="acquisition">
+        <option value="activation"> 
+        <option value="retention"> 
+      </datalist>
       <button type="submit">Shorten URL</button>
     </form>
 
@@ -71,26 +77,33 @@
   </div>
 
   <script>
-    document.getElementById('urlForm').addEventListener('submit', handleSubmit); 
-    function handleSubmit(e) { 
-      e.preventDefault(); 
-      let url = document.querySelector('input[name="longUrl"]').value; 
-      //console.log(url); 
+    document.getElementById('urlForm').addEventListener('submit', handleSubmit);
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const longUrl = document.querySelector('input[name="longUrl"]').value;
+      const customAlias = document.querySelector('input[name="customAlias"]').value;
+      const topic = document.querySelector('input[name="topic"]').value;
+      const authToken = localStorage.getItem('authToken');
+      console.log(longUrl,authToken);
+
       fetch('/url/shorten', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({ url })  
+        body: JSON.stringify({ longUrl, customAlias, topic })
       })
       .then(response => response.json())
       .then(data => {
         console.log(data);
-    }).catch(error=>{
-      console.log("Error");
-    })
-  }
-      
+        document.getElementById('shortenedUrl').textContent = data.shortUrl;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
   </script>
 </body>
 </html>

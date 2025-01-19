@@ -70,6 +70,7 @@
 
   <script>
     window.onload = function() {
+        localStorage.clear();
       google.accounts.id.initialize({
         client_id: '744400210883-p47l84bgrlq1khvcgp4ga343cvs2p5so.apps.googleusercontent.com', 
         callback: handleCredentialResponse

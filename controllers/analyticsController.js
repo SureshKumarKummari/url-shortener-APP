@@ -13,7 +13,7 @@ async function trackAnalytics(req, res) {
   // Log the analytics (click tracking, etc.)
   await Analytics.create({ url_id: url.id, timestamp: new Date(), ip: req.ip });
 
-  res.redirect(url.original_url); // Redirect user to original URL
+  res.redirect(url.original_url); 
 }
 
 module.exports = { trackAnalytics };

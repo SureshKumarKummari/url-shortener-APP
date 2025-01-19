@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Define the URL schema
 const urlSchema = new Schema({
   url: {
     type: String,
@@ -13,12 +12,11 @@ const urlSchema = new Schema({
     unique: true,
   },
   user_id: {
-    type: Schema.Types.ObjectId, // Link to user who created the URL
+    type: Schema.Types.ObjectId,
     required: true,
   },
   group: {
   type: String,
-    enum: ['acquisition', 'activation', 'retention'],
     required: true,
   },
   analytics: {
@@ -26,16 +24,23 @@ const urlSchema = new Schema({
       type: Number,
       default: 0,
     },
-    click_details: [{
-      referrer: String,
-      date: Date,
+    logs: [{
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+      userAgent: String,
       ip: String,
-    }],
+      geolocation: {
+        type:String,
+        default:"N/A"
+      }
+    }]
   },
 }, {
   timestamps: true, 
 });
 
-const URL = mongoose.model('URL', urlSchema);
+const URL = mongoose.model('urls', urlSchema);
 
 module.exports = URL;
