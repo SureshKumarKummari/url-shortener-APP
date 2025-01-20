@@ -148,7 +148,8 @@
     });
     const data = await response.json(); 
     console.log("Overall Analytics:", data); 
-    alert(JSON.stringify(data, null, 2)); 
+    displayOverallAnalytics(data)//(JSON.stringify(data,null,2));
+    //alert(JSON.stringify(data, null, 2)); 
   } catch (error) {
     console.error("Error fetching overall analytics:", error);
   }
@@ -167,8 +168,9 @@
             }
           });
           const data = await response.json(); 
-          console.log("Topic Analytics:", data); 
-          alert(JSON.stringify(data, null, 2)); 
+          displayTopicAnalytics(data);
+          //console.log("Topic Analytics:", data); 
+          //alert(JSON.stringify(data, null, 2)); 
         } catch (error) {
           console.error("Error fetching topic analytics:", error);
         }
@@ -187,8 +189,9 @@
             }
           });
           const data = await response.json(); 
-          console.log("URL Analytics:", data); 
-          alert(JSON.stringify(data, null, 2)); 
+          displayUrlAnalytics(data);
+         // console.log("URL Analytics:", data); 
+          //alert(JSON.stringify(data, null, 2)); 
         } catch (error) {
           console.error("Error fetching URL analytics:", error);
         }
@@ -197,3 +200,266 @@
   </script>
 </body>
 </html>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      overflow: auto;
+      padding-top: 60px;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .modal-body {
+      margin-top: 20px;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .data-box {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    .data-box label {
+      font-weight: bold;
+    }
+    .data-box .value {
+      font-size: 16px;
+    }
+    .nested-data {
+      margin-top: 10px;
+      padding-left: 20px;
+      font-size: 14px;
+    }
+  </style>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div class="modal-header">
+        Analytics Result
+      </div>
+      <div id="modalBody" class="modal-body">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(content) {
+      document.getElementById("modalBody").innerHTML = content;
+      document.getElementById("myModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("myModal").style.display = "none";
+    }
+
+    async function displayOverallAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total URLs:</label>
+                  <span class="value">${data.totalUrls}</span>
+                </div>`;
+content +=`<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>OS Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.osType) && data.osType.length > 0) {
+  data.osType.forEach(item => {
+    content += `<p>OS: ${item.osName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>Device Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.deviceType) && data.deviceType.length > 0) {
+  data.deviceType.forEach(item => {
+    content += `<p>Device: ${item.deviceName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
+async function displayUrlAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>OS Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.osType) && data.osType.length > 0) {
+  data.osType.forEach(item => {
+    content += `<p>OS: ${item.osName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>Device Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.deviceType) && data.deviceType.length > 0) {
+  data.deviceType.forEach(item => {
+    content += `<p>Device: ${item.deviceName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+//content += `<div class="data-box">
+  //            <label>URLs:</label>
+    //          <div class="nested-data">`;
+// if (Array.isArray(data.urls) && data.urls.length > 0) {
+//   data.urls.forEach(item => {
+//     content += `<p>Short URL: ${item.shortUrl}, Total Clicks: ${item.totalClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+//   });
+// } else {
+//   content += `<p>Empty</p>`;
+// }
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
+async function displayTopicAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>URLs:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.urls) && data.urls.length > 0) {
+  data.urls.forEach(item => {
+    content += `<p>Short URL: ${item.shortUrl}, Total Clicks: ${item.totalClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
+  </script>
