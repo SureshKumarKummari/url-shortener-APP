@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login/SignUp with Google</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
+  <title>URL Shortener</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,118 +20,446 @@
       padding: 30px;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    input {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
     button {
-      background-color: #4285F4;
+      background-color: #4CAF50;
       color: white;
+      padding: 10px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.3s ease;
     }
     button:hover {
-      background-color: #357ae8;
+      background-color: #45a049;
     }
-    #error-dialog {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #f8d7da;
-      padding: 20px;
-      border-radius: 5px;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-      z-index: 1000;
+    .result {
+      margin-top: 20px;
     }
-    #error-dialog button {
-      background-color: #721c24;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
+    .result a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .result a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-    
-  <div class="container">
-        <h1>Welcome To Url Shortener</h1>
-    <p>Login/SignUp using your Google account.</p>
-    <button id="google-signin-btn"></button>
-  </div>
-  <div id="error-dialog">
-    <p id="error-message"></p>
-    <button onclick="closeErrorDialog()">Close</button>
+  <div>
+    <div class="buttons">
+      <button onclick="redirectUrl()">Redirect URL</button>
+      <button onclick="getOverallAnalytics()">Overall Analytics</button>
+      <button onclick="getTopicAnalytics()">Topic-wise Analytics</button>
+      <button onclick="getUrlAnalytics()">URL-wise Analytics</button>
+    </div>
+    <div class="container">
+      <h1>URL Shortener</h1>
+      <form id="urlForm">
+        <input type="text" name="longUrl" placeholder="Enter your long URL" required />
+        <input type="text" name="customAlias" placeholder="Enter a custom alias (optional)" />
+        <input list="topics" name="topic" placeholder="Enter a topic (optional)" /> 
+        <datalist id="topics"> 
+          <option value="acquisition">
+          <option value="activation"> 
+          <option value="retention"> 
+        </datalist>
+        <button type="submit">Shorten URL</button>
+      </form>
+
+      <div class="result">
+        <h3>Your shortened URL will appear here:</h3>
+        <a id="shortened"><p id="shortenedUrl"></p></a>
+      </div>
+    </div>
+  </div> 
+
+  <script>
+    // Get the authToken from localStorage
+    const authToken = localStorage.getItem('authToken');
+
+    document.getElementById('urlForm').addEventListener('submit', handleSubmit);
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const longUrl = document.querySelector('input[name="longUrl"]').value;
+      const customAlias = document.querySelector('input[name="customAlias"]').value;
+      const topic = document.querySelector('input[name="topic"]').value;
+
+      try {
+        const response = await fetch('/url/shorten', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ longUrl, customAlias, topic })
+        });
+        const data = await response.json();
+        document.getElementById('shortenedUrl').textContent = data.shortUrl;
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function redirectUrl() { 
+      const alias = prompt("Enter the short URL alias to redirect:"); 
+      if (alias) { 
+        try {
+           fetch(`/url/shorten/${alias}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            }
+          }).then(response => response.json()).then((res)=>{
+            //console.log(res.url);
+           window.location.href= `${res.url}`;
+
+          }).catch((err)=>{
+            console.log("Error")
+        });
+        } catch (err) {
+          console.error("Error during redirection:", err);
+        }
+      }
+    }
+
+    async function getOverallAnalytics() { 
+
+  try {
+    const response = await fetch(`/analytics/`, { 
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    const data = await response.json(); 
+    console.log("Overall Analytics:", data); 
+    displayOverallAnalytics(data)//(JSON.stringify(data,null,2));
+    //alert(JSON.stringify(data, null, 2)); 
+  } catch (error) {
+    console.error("Error fetching overall analytics:", error);
+  }
+}
+
+
+    async function getTopicAnalytics() { 
+      const topic = prompt("Enter the topic for analytics:"); 
+      if (topic) { 
+        try {
+          const response = await fetch(`/analytics/topic/${topic}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            }
+          });
+          const data = await response.json(); 
+          displayTopicAnalytics(data);
+          //console.log("Topic Analytics:", data); 
+          //alert(JSON.stringify(data, null, 2)); 
+        } catch (error) {
+          console.error("Error fetching topic analytics:", error);
+        }
+      } 
+    }
+
+    async function getUrlAnalytics() {
+      const alias = prompt("Enter the short URL alias for analytics:"); 
+      if (alias) { 
+        try {
+          const response = await fetch(`/analytics/${alias}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            }
+          });
+          const data = await response.json(); 
+          displayUrlAnalytics(data);
+         // console.log("URL Analytics:", data); 
+          //alert(JSON.stringify(data, null, 2)); 
+        } catch (error) {
+          console.error("Error fetching URL analytics:", error);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      overflow: auto;
+      padding-top: 60px;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .modal-body {
+      margin-top: 20px;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .data-box {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    .data-box label {
+      font-weight: bold;
+    }
+    .data-box .value {
+      font-size: 16px;
+    }
+    .nested-data {
+      margin-top: 10px;
+      padding-left: 20px;
+      font-size: 14px;
+    }
+  </style>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div class="modal-header">
+        Analytics Result
+      </div>
+      <div id="modalBody" class="modal-body">
+      </div>
+    </div>
   </div>
 
   <script>
-    window.onload = function() {
-        localStorage.clear();
-      google.accounts.id.initialize({
-        client_id: '744400210883-p47l84bgrlq1khvcgp4ga343cvs2p5so.apps.googleusercontent.com', 
-        callback: handleCredentialResponse
-      });
-
-      google.accounts.id.renderButton(
-        document.getElementById('google-signin-btn'), 
-        { theme: "outline", size: "large" }
-      );
-    };
-
-    function handleCredentialResponse(response) {
-        if (!response || !response.credential) {
-        console.error('No credential received.');
-        showErrorDialog('Authentication failed. No credentials received.');
-        return;
-      }
-
-        console.log(response.toString());
-      const idToken = response.credential;  
-       fetch('http://localhost:5000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idToken })  // Send ID token to backend
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.token) {
-          console.log('JWT Token from server:', data.token);
-
-          localStorage.setItem('authToken', data.token);
-
-          // Redirect to index.html
-          window.location.href = 'index';
-        } else {
-          console.error('Authentication failed:', data.message);
-          showErrorDialog('Authentication failed. Please try again.');
-        }
-      })
-      .catch(error => {
-        console.error('Error during sign-in:', error);
-        showErrorDialog('Error during sign-in. Please try again.');
-      });
+    function openModal(content) {
+      document.getElementById("modalBody").innerHTML = content;
+      document.getElementById("myModal").style.display = "block";
     }
 
-    // Function to show error dialog
-    function showErrorDialog(message) {
-      const dialog = document.getElementById('error-dialog');
-      const errorMessage = document.getElementById('error-message');
-      errorMessage.textContent = message;
-      dialog.style.display = 'block';
+    function closeModal() {
+      document.getElementById("myModal").style.display = "none";
     }
 
-    // Function to close error dialog
-    function closeErrorDialog() {
-      const dialog = document.getElementById('error-dialog');
-      dialog.style.display = 'none';
-    }
-      console.log('User Name:', idToken);
-    
+    async function displayOverallAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total URLs:</label>
+                  <span class="value">${data.totalUrls}</span>
+                </div>`;
+content +=`<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>OS Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.osType) && data.osType.length > 0) {
+  data.osType.forEach(item => {
+    content += `<p>OS: ${item.osName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>Device Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.deviceType) && data.deviceType.length > 0) {
+  data.deviceType.forEach(item => {
+    content += `<p>Device: ${item.deviceName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
+async function displayUrlAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>OS Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.osType) && data.osType.length > 0) {
+  data.osType.forEach(item => {
+    content += `<p>OS: ${item.osName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>Device Type:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.deviceType) && data.deviceType.length > 0) {
+  data.deviceType.forEach(item => {
+    content += `<p>Device: ${item.deviceName}, Unique Clicks: ${item.uniqueClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+//content += `<div class="data-box">
+  //            <label>URLs:</label>
+    //          <div class="nested-data">`;
+// if (Array.isArray(data.urls) && data.urls.length > 0) {
+//   data.urls.forEach(item => {
+//     content += `<p>Short URL: ${item.shortUrl}, Total Clicks: ${item.totalClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+//   });
+// } else {
+//   content += `<p>Empty</p>`;
+// }
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
+async function displayTopicAnalytics(data) {
+
+let content = `<div class="data-box">
+                  <label>Total Clicks:</label>
+                  <span class="value">${data.totalClicks}</span>
+                </div>`;
+content += `<div class="data-box">
+              <label>Unique Users:</label>
+              <span class="value">${data.uniqueUsers}</span>
+            </div>`;
+
+content += `<div class="data-box">
+              <label>Clicks by Date:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.clicksByDate) && data.clicksByDate.length > 0) {
+  data.clicksByDate.forEach(item => {
+    content += `<p>Date: ${item.date}, Click Count: ${item.clickCount}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+content += `<div class="data-box">
+              <label>URLs:</label>
+              <div class="nested-data">`;
+if (Array.isArray(data.urls) && data.urls.length > 0) {
+  data.urls.forEach(item => {
+    content += `<p>Short URL: ${item.shortUrl}, Total Clicks: ${item.totalClicks}, Unique Users: ${item.uniqueUsers}</p>`;
+  });
+} else {
+  content += `<p>Empty</p>`;
+}
+content += `</div></div>`;
+
+openModal(content);
+}
+
+
+
   </script>
-
-</body>
-</html>
