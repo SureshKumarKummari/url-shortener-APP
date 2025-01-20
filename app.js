@@ -18,6 +18,8 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(rateLimiter);  
 
+app.use(express.static(path.join(__dirname, 'views')));
+
 app.get('/',(req,res)=>{
   res.sendFile(path.join(__dirname,'views','login.html'));
 })
