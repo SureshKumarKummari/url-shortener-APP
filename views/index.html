@@ -91,7 +91,7 @@
 
         console.log(response.toString());
       const idToken = response.credential;  
-       fetch('http://localhost:5000/auth/login', {
+       fetch('/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
