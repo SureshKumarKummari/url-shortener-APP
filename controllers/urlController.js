@@ -2,7 +2,7 @@ const URL = require('../models/urlModel');
 const logs=require('../models/logModel');
 const shortid = require('shortid');
 const { client } =require('../config/redis');
-const { UAParser }=require('user-agent-parser');
+const UAParser =require('user-agent-parser');
 
 
 async function createShortUrl(req, res) {
@@ -31,42 +31,86 @@ async function createShortUrl(req, res) {
 
 
 
-async function redirectUrl(req,res){
+// async function redirectUrl(req,res){
+//   const alias = req.params.alias; 
+//   try { 
+//       let originalUrl = await client.get(alias); 
+//       let urlDoc; 
+//       if (!originalUrl) {
+//          urlDoc = await URL.findOne({ short_url: alias }); 
+//         if (!urlDoc) { 
+//           return res.status(404).json({ message: 'URL not found' }); 
+//         } 
+//         originalUrl = urlDoc; 
+//         await client.set(alias, urlDoc, 'EX', 24 * 60 * 60); 
+//       } 
+//       //originalUrl=originalUrl||originalUrl.url;
+
+//      const parser = new UAParser(req.headers['user-agent']); 
+//      const result = parser.getResult
+//       const log =await logs.create({ 
+//         urlId:originalUrl._id,
+//         timestamp: Date.now(), 
+//         userAgent: req.headers['user-agent'], 
+//         ip: req.ip, 
+//         geolocation: 'N/A',
+//         deviceType: result.device.type || 'Desktop', 
+//         osType: result.os.name, 
+//       });
+//       log.save();
+
+//       return res.redirect(originalUrl.url); 
+//     } catch (err) { 
+//        console.error('Error redirecting:', err); 
+//        return res.status(500).json({ message: 'Internal server error' });
+//     }
+  
+// }
+
+
+async function redirectUrl(req, res) {
   const alias = req.params.alias; 
   try { 
-      let originalUrl = await client.get(alias); 
-      let urlDoc; 
-      if (!originalUrl) {
-         urlDoc = await URL.findOne({ short_url: alias }); 
-        if (!urlDoc) { 
-          return res.status(404).json({ message: 'URL not found' }); 
-        } 
-        originalUrl = urlDoc.url; 
-        await client.set(alias, [originalUrl,urlDoc._id], 'EX', 24 * 60 * 60); 
+    let originalUrl = await client.get(alias); 
+
+    if (!originalUrl) {
+      const urlDoc = await URL.findOne({ short_url: alias }); 
+      if (!urlDoc) { 
+        return res.status(404).json({ message: 'URL not found' }); 
       } 
-      originalUrl=originalUrl||originalUrl[0];
-      let urlid=originalUrl[1]||urlDoc._id;
-
-     const parser = new UAParser(req.headers['user-agent']); 
-     const result = parser.getResult
-      const log =await logs.create({ 
-        urlId:urlid,
-        timestamp: Date.now(), 
-        userAgent: req.headers['user-agent'], 
-        ip: req.ip, 
-        geolocation: 'N/A',
-        deviceType: result.device.type || 'Desktop', 
-        osType: result.os.name, 
-      });
-      log.save();
-
-      return res.redirect(originalUrl); 
-    } catch (err) { 
-       console.error('Error redirecting:', err); 
-       return res.status(500).json({ message: 'Internal server error' });
+      
+      originalUrl = JSON.stringify(urlDoc);
+      await client.set(alias, originalUrl, 'EX', 24 * 60 * 60); 
+    } else {
+      originalUrl = JSON.parse(originalUrl);
     }
-  
+
+    const parser = new UAParser(req.headers['user-agent']); 
+    const result = parser.getResult();
+
+    const log = await logs.create({ 
+      urlId: originalUrl._id, 
+      timestamp: Date.now(), 
+      userAgent: req.headers['user-agent'], 
+      ip: req.ip, 
+      geolocation: 'N/A', 
+      deviceType: result.device.type || 'Desktop', 
+      osType: result.os.name, 
+    });
+    await log.save();
+
+    await URL.findByIdAndUpdate(originalUrl._id, {
+      $inc: { clicks: 1 }
+    });
+
+    res.status(200).json({"url":originalUrl.url});
+
+  } catch (err) { 
+    console.error('Error redirecting:', err); 
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }
+
 
 module.exports = { createShortUrl,redirectUrl };
 

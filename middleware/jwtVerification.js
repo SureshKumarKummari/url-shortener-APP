@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 
 function authenticateToken(req, res, next) {
-    console.log("In authentication");
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -12,7 +11,7 @@ function authenticateToken(req, res, next) {
 
     req.user = { id: user.id, email: user.email, name: user.name }; 
     console.log("In authentication calling next")
-    next(); // Pass control to the next middleware function
+    next(); 
   });
 }
 

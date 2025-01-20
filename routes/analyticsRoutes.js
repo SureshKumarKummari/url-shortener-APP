@@ -6,8 +6,11 @@ const router = express.Router();
 
 router.get('/:alias',authenticateToken, getAnalytics);
 
-router.get('/topic/:topic',authenticateToken, getAnalyticsByTopic)
+router.get('/topic/:topic',authenticateToken, getAnalyticsByTopic); 
 
-router.get('/overall',authenticateToken,getOverallAnalytics);
+router.get('/', authenticateToken, getOverallAnalytics); 
+
 
 module.exports = router;
+
+

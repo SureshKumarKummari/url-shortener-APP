@@ -105,6 +105,8 @@ async function getAnalyticsByTopic(req, res) {
 
 
 async function getOverallAnalytics(req, res) {
+
+  console.log("In overall analytics");
   const userId = req.user.id;
 
   try {

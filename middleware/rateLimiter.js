@@ -3,7 +3,7 @@ const { client }=require('../config/redis.js');
 
 const rateLimiter = new rateLimit.RateLimiterRedis({
   storeClient: client,
-  points: 100,
+  points: 1000,
   duration: 24 * 60 * 60,
 });
 
